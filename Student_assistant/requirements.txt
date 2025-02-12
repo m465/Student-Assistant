@@ -1,5 +1,8 @@
 streamlit
-openai-whisper
+openai-whisper  # Use this instead of "whisper"
 google-generativeai
 langchain
 langchain-google-genai
+numpy==1.26.4  # Ensure compatibility
+torch
+torchaudio
