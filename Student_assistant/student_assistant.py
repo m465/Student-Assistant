@@ -7,26 +7,22 @@ from langchain.memory import ConversationSummaryMemory
 from langchain.chains import ConversationChain
 from langchain_google_genai import ChatGoogleGenerativeAI
 
-# Load Whisper Tiny model for faster speech-to-text processing
+# Load Whisper Tiny (English-only for faster processing)
 @st.cache_resource
 def load_model():
-    return whisper.load_model("tiny")
+    return whisper.load_model("tiny.en")  # Faster than "tiny"
 
 model = load_model()
 
 # Set up API key securely
 genai.configure(api_key=os.getenv("AIzaSyBYTITnkXaYIMPGBMbyrniKLAZJx0bu4k4"))  # Set this in Streamlit Cloud
 
-# Initialize memory for conversation
-memory = ConversationSummaryMemory(llm=ChatGoogleGenerativeAI(model="gemini-pro-vision"), return_messages=True)
+# Use Gemini Flash (Faster)
+llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash")
 
-# Initialize Gemini smaller model
-llm = ChatGoogleGenerativeAI(model="gemini-pro-vision")
-conversation = ConversationChain(llm=llm, memory=memory)
-
-# Function to get AI-powered response
+# Function to get AI-powered response (Streaming for faster output)
 def get_gemini_explanation(query):
-    response = conversation.predict(input=query)
+    response = llm.invoke(query)
     return response if response else "Error retrieving explanation."
 
 # Function to process audio and get text
@@ -50,7 +46,6 @@ with col1:
     # Upload audio file
     uploaded_file = st.file_uploader("Upload an audio file", type=["wav", "mp3", "m4a"])
 
-    # Record audio directly
     if uploaded_file:
         with tempfile.NamedTemporaryFile(delete=False) as temp_audio:
             temp_audio.write(uploaded_file.read())
@@ -59,11 +54,15 @@ with col1:
         st.audio(temp_audio_path, format="audio/wav")
 
         # Transcribe audio
-        transcribed_text = transcribe_audio(temp_audio_path)
+        with st.spinner("Transcribing..."):
+            transcribed_text = transcribe_audio(temp_audio_path)
+
         st.write("**Transcribed Text:**", transcribed_text)
 
         # Get AI response
-        explanation = get_gemini_explanation(transcribed_text)
+        with st.spinner("Thinking..."):
+            explanation = get_gemini_explanation(transcribed_text)
+
         st.subheader("📘 AI-Powered Explanation")
         st.write(explanation)
 
@@ -73,6 +72,9 @@ with col2:
 
     if user_input:
         st.write("**Your Question:**", user_input)
-        explanation = get_gemini_explanation(user_input)
+        
+        with st.spinner("Thinking..."):
+            explanation = get_gemini_explanation(user_input)
+
         st.subheader("📘 AI-Powered Explanation")
         st.write(explanation)
