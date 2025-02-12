@@ -10,7 +10,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 # Load Whisper model
 @st.cache_resource
 def load_model():
-    return whisper.load_model("base")
+    return whisper.load_model("tiny")
 
 model = load_model()
 
@@ -18,10 +18,10 @@ model = load_model()
 genai.configure(api_key=os.getenv("AIzaSyBYTITnkXaYIMPGBMbyrniKLAZJx0bu4k4"))  # Ensure the API key is set as an env variable
 
 # Initialize memory for conversation
-memory = ConversationSummaryMemory(llm=ChatGoogleGenerativeAI(model="gemini-pro"), return_messages=True)
+memory = ConversationSummaryMemory(llm=ChatGoogleGenerativeAI(model="gemini-1.0-pro-latest"), return_messages=True)
 
 # Initialize Gemini model
-llm = ChatGoogleGenerativeAI(model="gemini-pro")
+llm = ChatGoogleGenerativeAI(model="gemini-1.0-pro-latest")
 conversation = ConversationChain(llm=llm, memory=memory)
 
 # Function to get AI-powered response
